@@ -1,3 +1,4 @@
+-- board width, board height
 local BW, BH = 20, 20
 local rotation = math.pi/4
 local colors = {}
@@ -17,9 +18,9 @@ end
 local function screen2iso (x,y)
   -- undo transformations exactly
   y = y*2
-  x,y = x-20*BH,y-20*BH
+  x,y = x-20*BW,y-20*BH
   x,y = rotate2d(-rotation,x,y)
-  x,y = x-20*-BH/2,y-20*-BH/2
+  x,y = x-20*-BW/2,y-20*-BH/2
   return math.floor(x/20),math.floor(y/20)
 end
 
@@ -29,6 +30,7 @@ local function draw_board()
   for k,v in ipairs(colors) do
     local x, y = ((k-1) % BW), math.floor((k-1) / BW) -- standard 1d to 2d array conversion
 
+    -- draw selection cursor
     if (x == selx and y == sely) then
       love.graphics.setColor(1,1,1,1)
     else
@@ -42,17 +44,22 @@ end
 
 function love.update(dt)
   selx,sely = screen2iso(love.mouse.getPosition())
-  rotation = math.pi*2*(love.mouse.getX()/800)
+  -- rotation = math.pi*2*(love.mouse.getX()/800)
 end
 
 function love.draw ()
   love.graphics.print(string.format("%f, %f", selx,sely))
   love.graphics.push("transform")
 
+  -- these transformations are applied in reverse order.
+  -- squash height
   love.graphics.scale(1,0.5)
-  love.graphics.translate(20*BH,20*BH)
+  -- set rotation offset to center
+  love.graphics.translate(20*BW,20*BH)
+  -- rotate
   love.graphics.rotate(rotation)
-  love.graphics.translate(20*-BH/2, 20*-BH/2)
+  -- center board on the screen
+  love.graphics.translate(20*-BW/2, 20*-BH/2)
   draw_board()
 
   love.graphics.pop()
