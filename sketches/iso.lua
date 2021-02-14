@@ -1,5 +1,6 @@
 -- board width, board height
-local BW, BH = 20, 20
+local BW, BH = 30, 20
+local tile_size = 10
 local rotation = math.pi/4
 local colors = {}
 for i=1,BW*BH do
@@ -16,12 +17,13 @@ local function rotate2d (theta, x,y)
 end
 
 local function screen2iso (x,y)
-  -- undo transformations exactly
+  local ww,wh = love.graphics.getDimensions()
+  -- undo transformations exactly, in the reverse order as they were applied.
+  x,y = x-ww/2, y-wh/2
   y = y*2
-  x,y = x-20*BW,y-20*BH
   x,y = rotate2d(-rotation,x,y)
-  x,y = x-20*-BW/2,y-20*-BH/2
-  return math.floor(x/20),math.floor(y/20)
+  x,y = x+tile_size*BW/2, y+tile_size*BH/2
+  return math.floor(x/tile_size),math.floor(y/tile_size)
 end
 
 local selx, sely = 0,0
@@ -37,7 +39,7 @@ local function draw_board()
       love.graphics.setColor(unpack(v))
     end
 
-    love.graphics.rectangle('fill', x*20,y*20,20,20)
+    love.graphics.rectangle('fill', x*tile_size,y*tile_size,tile_size,tile_size)
     love.graphics.setColor(1,1,1,1)
   end
 end
@@ -48,18 +50,23 @@ function love.update(dt)
 end
 
 function love.draw ()
+  local ww,wh = love.graphics.getDimensions()
+
   love.graphics.print(string.format("%f, %f", selx,sely))
   love.graphics.push("transform")
 
   -- these transformations are applied in reverse order.
+  -- center board on the screen
+  -- NOTE: to create a camera, parameterize this instead of centering.
+  -- This is the actual translation vector.
+  love.graphics.translate(ww/2,wh/2)
   -- squash height
   love.graphics.scale(1,0.5)
-  -- set rotation offset to center
-  love.graphics.translate(20*BW,20*BH)
   -- rotate
   love.graphics.rotate(rotation)
-  -- center board on the screen
-  love.graphics.translate(20*-BW/2, 20*-BH/2)
+  -- set rotation offset to center
+  love.graphics.translate(-tile_size*BW/2,-tile_size*BH/2)
+
   draw_board()
 
   love.graphics.pop()
